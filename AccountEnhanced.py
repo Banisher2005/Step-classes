@@ -13,7 +13,7 @@ class Account:
             self.__accountType = accountType
             
         # Minimum Balance Rules on Creation
-        min_balance = 500 if self.__accountType == "Savings" else 1000
+        min_balance = 500.0 if self.__accountType == "Savings" else 1000.0
         self.__balance = initialBalance if initialBalance >= min_balance else min_balance
         
         # Status management
@@ -42,7 +42,7 @@ class Account:
         if amount <= 0:
             return False
             
-        min_balance = 500 if self.__accountType == "Savings" else 1000
+        min_balance = 500.0 if self.__accountType == "Savings" else 0.0
         if self.__balance - amount < min_balance:
             return False
             
