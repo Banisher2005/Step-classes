@@ -14,10 +14,15 @@ class Account:
     MAX_PIN = 9999
 
     # ===== Constructor =====
-    def __init__(self, accountNumber, name, age, initialBalance, accountType):
+    def __init__(self, accountNumber, name, age, initialBalance, accountType=None):
         if age < self.MIN_AGE:
             raise ValueError(f"Age must be at least {self.MIN_AGE}")
             
+        # Support both (accountNumber, name, age, initialBalance, accountType)
+        # and (accountNumber, name, age, accountType, initialBalance)
+        if isinstance(initialBalance, str) and (isinstance(accountType, (int, float)) or accountType is None):
+            accountType, initialBalance = initialBalance, (accountType if accountType is not None else 0.0)
+
         if accountType not in ["Savings", "Current"]:
             raise ValueError("Account type must be 'Savings' or 'Current'")
             
@@ -74,17 +79,37 @@ class Account:
             raise RuntimeError("Account is already active")
         self.__status = "Active"
 
+    def close_account(self):
+        self.closeAccount()
+
+    def reopen_account(self):
+        self.reopenAccount()
+
     # ===== PIN Management =====
     def setPin(self, pin):
-        if not (isinstance(pin, int) and self.MIN_PIN <= pin <= self.MAX_PIN):
+        if isinstance(pin, int) and self.MIN_PIN <= pin <= self.MAX_PIN:
+            self.__pin = str(pin)
+        elif isinstance(pin, str) and pin.isdigit() and len(pin) == 4:
+            self.__pin = pin
+        else:
             raise ValueError("PIN must be a 4-digit number")
-        self.__pin = pin
+
+    def set_pin(self, pin):
+        self.setPin(pin)
 
     def verifyPin(self, pin):
-        return self.__pin == pin
+        if self.__pin is None or pin is None:
+            return False
+        return self.__pin == str(pin)
+
+    def verify_pin(self, pin):
+        return self.verifyPin(pin)
 
     def hasPin(self):
         return self.__pin is not None
+
+    def has_pin(self):
+        return self.hasPin()
 
     # ===== Helper Methods =====
     def getMinimumBalance(self):
@@ -120,3 +145,37 @@ class Account:
         if age < self.MIN_AGE:
             raise ValueError(f"Age must be at least {self.MIN_AGE}")
         self.__age = age
+
+    # ===== Properties =====
+    @property
+    def balance(self):
+        return self.__balance
+
+    @property
+    def status(self):
+        return self.__status
+
+    @property
+    def account_number(self):
+        return self.__accountNumber
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def age(self):
+        return self.__age
+
+    @property
+    def account_type(self):
+        return self.__accountType
+
+    # ===== String Representation =====
+    def __str__(self):
+        pin_status = "Yes" if self.hasPin() else "No"
+        return f"Account #{self.__accountNumber} | {self.__name} ({self.__age} yrs) | {self.__accountType} | ₹{self.__balance} | {self.__status} | PIN: {pin_status}"
+
+    def __repr__(self):
+        return self.__str__()
+
