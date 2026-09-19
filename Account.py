@@ -1,4 +1,10 @@
 from abc import ABC, abstractmethod
+from AccountException import AccountException
+from InactiveAccountException import InactiveAccountException
+from InsufficientBalanceException import InsufficientBalanceException
+from InvalidAmountException import InvalidAmountException
+from InvalidPinException import InvalidPinException
+from MinimumBalanceViolationException import MinimumBalanceViolationException
 
 
 class Account(ABC):
@@ -42,23 +48,23 @@ class Account(ABC):
 
     def validate_active(self):
         if self.status != "Active":
-            raise Exception(
+            raise InactiveAccountException(
                 "Account is inactive. Please reopen the account "
                 "or contact support."
             )
 
     def validate_amount(self, amount):
         if amount <= 0:
-            raise ValueError(
+            raise InvalidAmountException(
                 f"Amount must be positive. Provided: ₹{amount}"
             )
 
     def validate_pin(self, pin):
         if self.pin is None:
-            raise ValueError("PIN not set for this account")
+            raise InvalidPinException("PIN not set for this account")
 
         if pin is None or str(self.pin) != str(pin):
-            raise ValueError("Incorrect PIN")
+            raise InvalidPinException("Incorrect PIN")
 
     # ===== PIN =====
 
@@ -67,7 +73,7 @@ class Account(ABC):
             pin = int(pin)
 
         if not isinstance(pin, int) or pin < self.MIN_PIN or pin > self.MAX_PIN:
-            raise ValueError(
+            raise InvalidPinException(
                 f"PIN must be between {self.MIN_PIN} and {self.MAX_PIN}"
             )
 
@@ -75,6 +81,11 @@ class Account(ABC):
 
     def has_pin(self):
         return self.pin is not None
+
+    def verify_pin(self, pin):
+        if self.pin is None or pin is None:
+            return False
+        return str(self.pin) == str(pin)
 
     # ===== Deposit =====
 
@@ -92,7 +103,7 @@ class Account(ABC):
         self.validate_amount(amount)
 
         if self.balance - amount < self.get_minimum_balance():
-            raise Exception(
+            raise MinimumBalanceViolationException(
                 f"Cannot withdraw. Minimum balance of "
                 f"₹{self.get_minimum_balance()} required. "
                 f"Available after withdrawal: ₹{self.balance - amount}"
@@ -103,9 +114,13 @@ class Account(ABC):
     # ===== Account Status =====
 
     def close_account(self):
+        if self.status == "Inactive":
+            raise AccountException("Account is already closed")
         self.status = "Inactive"
 
     def reopen_account(self):
+        if self.status == "Active":
+            raise AccountException("Account is already active")
         self.status = "Active"
 
     # ===== Getters =====

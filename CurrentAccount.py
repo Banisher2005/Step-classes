@@ -1,4 +1,6 @@
 from Account import Account
+from InsufficientBalanceException import InsufficientBalanceException
+from InvalidAmountException import InvalidAmountException
 
 
 class CurrentAccount(Account):
@@ -23,9 +25,13 @@ class CurrentAccount(Account):
     def get_account_type(self):
         return self.ACCOUNT_TYPE
 
-    # ===== Overdraft Withdrawal =====
+    # ===== Overdraft Withdrawal (Method Overriding / Polymorphism) =====
 
     def withdraw(self, amount, pin):
+        """
+        Overrides Account.withdraw() to provide overdraft protection up to ₹5000.
+        Demonstrates method overriding and runtime polymorphism.
+        """
         self.validate_active()
         self.validate_pin(pin)
         self.validate_amount(amount)
@@ -36,7 +42,7 @@ class CurrentAccount(Account):
         )
 
         if amount > available_balance:
-            raise Exception(
+            raise InsufficientBalanceException(
                 f"Insufficient funds. Available: ₹{available_balance}, "
                 f"Requested: ₹{amount}"
             )
@@ -52,6 +58,9 @@ class CurrentAccount(Account):
         self.balance = new_balance
 
     def deposit(self, amount):
+        """
+        Overrides Account.deposit() to automatically restore overdraft usage.
+        """
         super().deposit(amount)
         if self.balance >= self.get_minimum_balance():
             self.overdraft_used = 0.0
@@ -74,12 +83,12 @@ class CurrentAccount(Account):
 
     def repay_overdraft(self, amount):
         if amount <= 0:
-            raise ValueError(
+            raise InvalidAmountException(
                 "Repayment amount must be positive"
             )
 
         if amount > self.overdraft_used:
-            raise ValueError(
+            raise InvalidAmountException(
                 f"Amount exceeds overdraft used "
                 f"(₹{self.overdraft_used})"
             )
