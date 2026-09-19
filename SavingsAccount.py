@@ -1,4 +1,5 @@
 from Account import Account
+from MinimumBalanceViolationException import MinimumBalanceViolationException
 
 
 class SavingsAccount(Account):
@@ -20,6 +21,24 @@ class SavingsAccount(Account):
 
     def get_account_type(self):
         return self.ACCOUNT_TYPE
+
+    def withdraw(self, amount, pin):
+        """
+        Overrides Account.withdraw() to enforce Savings minimum balance constraint (₹500).
+        Demonstrates method overriding and runtime polymorphism.
+        """
+        self.validate_active()
+        self.validate_pin(pin)
+        self.validate_amount(amount)
+
+        if self.balance - amount < self.MINIMUM_BALANCE:
+            raise MinimumBalanceViolationException(
+                f"Cannot withdraw. Minimum balance of "
+                f"₹{self.MINIMUM_BALANCE} required. "
+                f"Available after withdrawal: ₹{self.balance - amount}"
+            )
+
+        self.balance -= amount
 
     def calculate_interest(self, years):
         if years < 0:
